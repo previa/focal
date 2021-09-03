@@ -28,7 +28,6 @@ int main() {
     wav_header_get(&header, buffer);
     wav_header_print(&header);
 
-
     byte_buffer_close(buffer);
 
     return 0;

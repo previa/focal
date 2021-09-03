@@ -44,7 +44,7 @@ static inline int wav_header_get(WavHeader *header, ByteBuffer *buffer) {
 	return 1;
     }
 
-    header->chunk_size = byte_buffer_read_int32(buffer, BE);
+    header->chunk_size = byte_buffer_read_int32(buffer, LE);
 
     if(byte_buffer_read_int32(buffer, BE) != HEADER_FORMAT) {
 	fprintf(stderr, "[WavHeader] Unable to parse header: did not find Format\n");
