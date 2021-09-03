@@ -1,32 +1,35 @@
-#include "byte_buffer.h"
 #include <stdio.h>
 
+#include "wav_decoder.h"
+
 int main() {
-	size_t read_size = 12 * 1024;
+    size_t read_size = 12 * 1024;
 
-	FILE *fp = fopen("wav_audio_48000_stereo.wav", "r");
+    FILE *fp = fopen("wav_audio_48000_stereo.wav", "r");
 
-	if(fp == NULL) {
-		fprintf(stderr, "Unable to open file\n");
-		return 1;
-	}
+    if(fp == NULL) {
+	fprintf(stderr, "Unable to open file\n");
+	return 1;
+    }
 
-	// Determine the file size
-	fseek(fp, 0, SEEK_END);
-	
-	size_t file_size = ftell(fp);
-	rewind(fp);
+    // Determine the file size
+    fseek(fp, 0, SEEK_END);
 
-	printf("File size: %zu\n", file_size);
+    size_t file_size = ftell(fp);
+    rewind(fp);
 
-	ByteBuffer *buffer;
-	byte_buffer_init(&buffer, fp, file_size, read_size);
-	
-	while(buffer->m_finished != Yes) {
-		int32_t value = byte_buffer_read_int32(buffer, BE);
-	}
+    printf("File size: %zu\n", file_size);
 
-	byte_buffer_close(buffer);
+    ByteBuffer *buffer;
+    byte_buffer_init(&buffer, fp, file_size, read_size);
+    
+    // Get the WAV header
+    WavHeader header;
+    wav_header_get(&header, buffer);
+    wav_header_print(&header);
 
-	return 0;
+
+    byte_buffer_close(buffer);
+
+    return 0;
 }
