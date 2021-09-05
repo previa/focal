@@ -1,34 +1,38 @@
 #include <stdio.h>
 
-#include "wav_decoder.h"
+#include "wav.h"
+
+size_t get_file_size(FILE* fp) {
+  // Determine the file size
+  fseek(fp, 0, SEEK_END);
+
+  size_t file_size = ftell(fp);
+  rewind(fp);
+  return file_size;
+}
 
 int main() {
-    size_t read_size = 12 * 1024;
+  size_t read_size = 12 * 1024;
 
-    FILE *fp = fopen("wav_audio_48000_stereo.wav", "r");
+  FILE* fp = fopen("wav_audio_48000_stereo.wav", "r");
 
-    if(fp == NULL) {
-	fprintf(stderr, "Unable to open file\n");
-	return 1;
-    }
+  if (fp == NULL) {
+    fprintf(stderr, "Unable to open file\n");
+    return 1;
+  }
 
-    // Determine the file size
-    fseek(fp, 0, SEEK_END);
+  size_t file_size = get_file_size(fp);
+  printf("File size: %zu bytes\n", file_size);
 
-    size_t file_size = ftell(fp);
-    rewind(fp);
+  ByteBuffer* buffer;
+  byte_buffer_init(&buffer, fp, file_size, read_size);
 
-    printf("File size: %zu\n", file_size);
+  // 5512 needed for audio fingerprinting
+  wav_resample(buffer, 1, 5512, 16, 60);
 
-    ByteBuffer *buffer;
-    byte_buffer_init(&buffer, fp, file_size, read_size);
-    
-    // Get the WAV header
-    WavHeader header;
-    wav_header_get(&header, buffer);
-    wav_header_print(&header);
+  byte_buffer_close(buffer);
 
-    byte_buffer_close(buffer);
+  fclose(fp);
 
-    return 0;
+  return 0;
 }
