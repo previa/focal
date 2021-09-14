@@ -1,38 +1,39 @@
 #include <stdio.h>
 
-#include "wav.h"
+#include "wav_sampling.h"
 
 size_t get_file_size(FILE* fp) {
-  // Determine the file size
-  fseek(fp, 0, SEEK_END);
+    // Determine the file size
+    fseek(fp, 0, SEEK_END);
 
-  size_t file_size = ftell(fp);
-  rewind(fp);
-  return file_size;
+    size_t file_size = ftell(fp);
+    rewind(fp);
+    return file_size;
 }
 
 int main() {
-  size_t read_size = 12 * 1024;
+    WavDecoder decoder;
+    // Initialize the decoder
+    if (wav_decoder_init(&decoder, "wav_audio_48000_stereo.wav")) {
+        return 1;
+    }
 
-  FILE* fp = fopen("wav_audio_48000_stereo.wav", "r");
+    wav_decoder_get_header(&decoder);
+    wav_print_header(decoder.header);
 
-  if (fp == NULL) {
-    fprintf(stderr, "Unable to open file\n");
-    return 1;
-  }
+    WavEncoder encoder;
+    // Initialize the encoder
+    if (wav_encoder_init(&encoder, "wav_audio_5512_mono.wav")) {
+        return 1;
+    }
 
-  size_t file_size = get_file_size(fp);
-  printf("File size: %zu bytes\n", file_size);
+    wav_encoder_set_header(&encoder, 5512, BITS_PER_SAMPLE_16, AUDIO_FORMAT_PCM, MONO, 60);
+    wav_print_header(encoder.header);
 
-  ByteBuffer* buffer;
-  byte_buffer_init(&buffer, fp, file_size, read_size);
+    wav_resample(&decoder, &encoder, DOWNSAMPLE_AVERAGE);
 
-  // 5512 needed for audio fingerprinting
-  wav_resample(buffer, 1, 5512, 16, 60);
+    wav_decoder_close(&decoder);
+    wav_encoder_close(&encoder);
 
-  byte_buffer_close(buffer);
-
-  fclose(fp);
-
-  return 0;
+    return 0;
 }
